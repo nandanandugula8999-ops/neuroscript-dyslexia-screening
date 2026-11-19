@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NeuroScript — Dyslexia Handwriting Screening</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- LOGIN / SIGN UP VIEW -->
+    <div id="login-view" class="login-wrapper">
+        <div class="login-card">
+            <div class="brand-badge">AI Screening Portal</div>
+            <h1 id="auth-title">NeuroScript Sign In</h1>
+            <p id="auth-subtitle" class="subtitle">Preliminary Handwriting Orientation & Word Segmentation Analysis</p>
+
+            <!-- Mode Tabs -->
+            <div class="auth-tabs">
+                <button type="button" id="tab-signin" class="auth-tab active">Sign In</button>
+                <button type="button" id="tab-signup" class="auth-tab">Create Account</button>
+            </div>
+
+            <div class="form-group">
+                <label for="username">Clinician / Evaluator ID</label>
+                <input type="text" id="username" placeholder="Enter your ID">
+            </div>
+            <div class="form-group">
+                <label for="password">Access Passcode</label>
+                <input type="password" id="password" placeholder="Enter your passcode">
+            </div>
+
+            <div class="form-group" id="confirm-pass-group" style="display: none;">
+                <label for="confirm-password">Confirm Passcode</label>
+                <input type="password" id="confirm-password" placeholder="Re-enter passcode">
+            </div>
+
+            <p id="login-error" class="error-msg" style="display:none;"></p>
+            <p id="login-success" class="success-msg" style="display:none;"></p>
+
+            <button id="login-btn" class="primary-btn full-width">Sign In to Dashboard</button>
+        </div>
+    </div>
+
+    <!-- DASHBOARD VIEW -->
+    <div id="dashboard-view" class="app-shell" style="display: none;">
+        <header class="topbar">
+            <div class="topbar-brand">
+                <span class="logo-dot"></span>
+                <div>
+                    <h2>NeuroScript Screening</h2>
+                    <span class="topbar-sub">CNN + SVM Orientation & Word Segmentation Engine</span>
+                </div>
+            </div>
+            <div class="topbar-actions">
+                <button id="print-report-btn" type="button" class="secondary-btn">Print / Save Report</button>
+                <button id="logout-btn" type="button" class="danger-outline-btn">Logout</button>
+            </div>
+        </header>
+
+        <section class="metadata-bar">
+            <div class="meta-field">
+                <label for="student-name">Student Name</label>
+                <input type="text" id="student-name" placeholder="Optional (e.g., Aarav K.)">
+            </div>
+            <div class="meta-field">
+                <label for="student-age">Age / Grade</label>
+                <input type="text" id="student-age" placeholder="e.g., 7 yrs / Grade 2">
+            </div>
+            <div class="meta-field">
+                <label for="session-date">Screening Date</label>
+                <input type="text" id="session-date" readonly>
+            </div>
+        </section>
+
+        <main class="workspace-grid">
+            <!-- LEFT PANEL -->
+            <section class="panel input-panel">
+                <div class="panel-header">
+                    <h3>1. Handwriting Input</h3>
+                    <div class="mode-switch">
+                        <button id="mode-draw" type="button" class="mode-btn active">Single Letter</button>
+                        <button id="mode-word" type="button" class="mode-btn">Word Mode</button>
+                        <button id="mode-upload" type="button" class="mode-btn">Upload</button>
+                    </div>
+                </div>
+
+                <!-- Single Character Target Checklist -->
+                <div id="single-char-controls">
+                    <p class="tip-text">Select a target asymmetric character, or draw freely in Auto mode.</p>
+                    <div class="checklist-section">
+                        <span class="checklist-label">Target Character Checklist:</span>
+                        <div id="char-checklist" class="char-checklist">
+                            <button type="button" class="char-pill" data-char="b">b<span class="char-status"></span></button>
+                            <button type="button" class="char-pill" data-char="d">d<span class="char-status"></span></button>
+                            <button type="button" class="char-pill" data-char="p">p<span class="char-status"></span></button>
+                            <button type="button" class="char-pill" data-char="q">q<span class="char-status"></span></button>
+                            <button type="button" class="char-pill" data-char="E">E<span class="char-status"></span></button>
+                            <button type="button" class="char-pill" data-char="3">3<span class="char-status"></span></button>
+                            <button type="button" class="char-pill" data-char="S">S<span class="char-status"></span></button>
+                            <button type="button" class="char-pill" data-char="R">R<span class="char-status"></span></button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Word Segmentation Controls -->
+                <div id="word-controls" style="display: none;">
+                    <p class="tip-text">Type a short word and write it below with small spaces between letters (print style).</p>
+                    <div class="word-input-row">
+                        <input type="text" id="target-word-input" maxlength="8" placeholder="Target word (e.g., bad, BED, pSq)">
+                        <div class="word-presets">
+                            <button type="button" class="preset-btn" data-word="bad">bad</button>
+                            <button type="button" class="preset-btn" data-word="BED">BED</button>
+                            <button type="button" class="preset-btn" data-word="pSq">pSq</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="canvas-container" class="canvas-stage">
+                    <canvas id="canvas" width="280" height="280"></canvas>
+                    <canvas id="word-canvas" width="460" height="170" style="display: none;"></canvas>
+                    <input type="file" id="image-upload" accept="image/png, image/jpeg, image/jpg" style="display: none;">
+                    <img id="preview-image" alt="Uploaded character preview" style="display: none;">
+                </div>
+
+                <div class="telemetry-strip">
+                    <div class="telemetry-item">
+                        <span class="telemetry-label">Strokes</span>
+                        <strong id="stroke-count">0</strong>
+                    </div>
+                    <div class="telemetry-item">
+                        <span class="telemetry-label">Writing Time</span>
+                        <strong id="draw-time">0.0s</strong>
+                    </div>
+                    <div class="telemetry-item">
+                        <span class="telemetry-label">Active Mode</span>
+                        <strong id="active-target-display">Auto</strong>
+                    </div>
+                </div>
+
+                <div class="action-row">
+                    <button id="clear-btn" type="button" class="secondary-btn">Clear Pad</button>
+                    <button id="predict-btn" type="button" class="primary-btn">Analyze Input</button>
+                </div>
+            </section>
+
+            <!-- RIGHT PANEL -->
+            <section class="panel results-panel">
+                <div class="panel-header">
+                    <h3>2. Screening Analysis</h3>
+                    <span class="rate-pill">Reversal Rate: <strong id="reversal-rate">0</strong>%</span>
+                </div>
+
+                <div id="result-box" class="result-card">
+                    <div class="result-top">
+                        <span class="result-label">Classification</span>
+                        <span id="result" class="result-value">Waiting...</span>
+                    </div>
+
+                    <div id="confidence-text" class="confidence-block" style="display: none;">
+                        <div class="confidence-header">
+                            <span>Model Confidence</span>
+                            <strong><span id="confidence">0</span>%</strong>
+                        </div>
+                        <div class="progress-track">
+                            <div id="confidence-bar" class="progress-fill" style="width: 0%;"></div>
+                        </div>
+                    </div>
+
+                    <div id="word-breakdown" class="word-breakdown" style="display: none;"></div>
+
+                    <p id="interpretation-text" class="interpretation-text" style="display: none;"></p>
+                </div>
+
+                <div id="risk-banner" class="risk-banner" style="display: none;"></div>
+
+                <div class="history-section">
+                    <div class="history-header">
+                        <h4>Session Screening Log</h4>
+                        <span class="history-hint">Latest 5 samples</span>
+                    </div>
+                    <div id="history-log" class="history-list">
+                        <div class="history-empty">No samples analyzed yet. Draw or upload to begin.</div>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <footer class="disclaimer-footer">
+            <strong>Educational Screening Notice:</strong> This tool uses deep feature extraction, connected-component character segmentation, and orientation analysis to highlight potential character reversals. It is designed for preliminary educational awareness and does not constitute a medical diagnosis.
+        </footer>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

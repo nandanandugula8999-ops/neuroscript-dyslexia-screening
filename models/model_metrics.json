@@ -1,0 +1,133 @@
+{
+  "classes": [
+    "Corrected",
+    "Normal",
+    "Reversal"
+  ],
+  "models": {
+    "cnn_svm": {
+      "accuracy": 0.867,
+      "macro_precision": 0.8668,
+      "macro_recall": 0.8684,
+      "macro_f1": 0.8672,
+      "test_images": 56619,
+      "source": "Held-out test split (CNN features)",
+      "per_class": [
+        {
+          "class": "Corrected",
+          "precision": 0.8737,
+          "recall": 0.9041,
+          "f1": 0.8886,
+          "support": 19234
+        },
+        {
+          "class": "Normal",
+          "precision": 0.8398,
+          "recall": 0.7908,
+          "f1": 0.8146,
+          "support": 19524
+        },
+        {
+          "class": "Reversal",
+          "precision": 0.8869,
+          "recall": 0.9103,
+          "f1": 0.8984,
+          "support": 17861
+        }
+      ]
+    },
+    "cnn_rf": {
+      "accuracy": 0.9069,
+      "macro_precision": 0.9074,
+      "macro_recall": 0.9061,
+      "macro_f1": 0.9057,
+      "test_images": 35508,
+      "source": "Deduplicated test split",
+      "per_class": [
+        {
+          "class": "Corrected",
+          "precision": 0.8946,
+          "recall": 0.9559,
+          "f1": 0.9242,
+          "support": 12199
+        },
+        {
+          "class": "Normal",
+          "precision": 0.9098,
+          "recall": 0.8293,
+          "f1": 0.8677,
+          "support": 11646
+        },
+        {
+          "class": "Reversal",
+          "precision": 0.9178,
+          "recall": 0.933,
+          "f1": 0.9253,
+          "support": 11663
+        }
+      ]
+    },
+    "mobilenet_svm": {
+      "accuracy": 0.7417,
+      "macro_precision": 0.7414,
+      "macro_recall": 0.7386,
+      "macro_f1": 0.7382,
+      "test_images": 56723,
+      "source": "Held-out test split (MobileNetV2 features)",
+      "per_class": [
+        {
+          "class": "Corrected",
+          "precision": 0.8569,
+          "recall": 0.8757,
+          "f1": 0.8662,
+          "support": 19284
+        },
+        {
+          "class": "Normal",
+          "precision": 0.6644,
+          "recall": 0.7316,
+          "f1": 0.6964,
+          "support": 19557
+        },
+        {
+          "class": "Reversal",
+          "precision": 0.7028,
+          "recall": 0.6084,
+          "f1": 0.6522,
+          "support": 17882
+        }
+      ]
+    },
+    "mobilenet_rf": {
+      "accuracy": 0.7383,
+      "macro_precision": 0.7373,
+      "macro_recall": 0.735,
+      "macro_f1": 0.7343,
+      "test_images": 56723,
+      "source": "Held-out test split (MobileNetV2 features)",
+      "per_class": [
+        {
+          "class": "Corrected",
+          "precision": 0.8588,
+          "recall": 0.8857,
+          "f1": 0.872,
+          "support": 19284
+        },
+        {
+          "class": "Normal",
+          "precision": 0.657,
+          "recall": 0.7219,
+          "f1": 0.6879,
+          "support": 19557
+        },
+        {
+          "class": "Reversal",
+          "precision": 0.6962,
+          "recall": 0.5974,
+          "f1": 0.643,
+          "support": 17882
+        }
+      ]
+    }
+  }
+}

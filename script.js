@@ -21,6 +21,20 @@ const strokeCountEl = document.getElementById("stroke-count");
 const drawTimeEl = document.getElementById("draw-time");
 const activeTargetEl = document.getElementById("active-target-display");
 const sessionDateEl = document.getElementById("session-date");
+const modelSelect = document.getElementById("model-select");
+const modelHint = document.getElementById("model-hint");
+const modelMeta = document.getElementById("model-meta");
+const heatmapContainer = document.getElementById("heatmap-container");
+const confidenceHeatmap = document.getElementById("confidence-heatmap");
+
+function updateModelHint() {
+    const option = modelSelect.options[modelSelect.selectedIndex];
+    const recommended = option.value === "cnn_svm" ? "Recommended · " : "";
+    modelHint.innerText = `${recommended}~${option.dataset.accuracy}% test accuracy · ${option.dataset.detail}`;
+}
+
+modelSelect.addEventListener("change", updateModelHint);
+updateModelHint();
 
 if (sessionDateEl) {
     sessionDateEl.value = new Date().toLocaleDateString("en-IN", {
@@ -165,7 +179,8 @@ document.querySelectorAll(".preset-btn").forEach((btn) => {
 });
 
 let isDrawing = false;
-let mode = "draw"; // "draw" | "word" | "upload"
+let mode = "draw"; // "draw" | "word"
+let uploadedFile = null;
 
 function resetAllCanvases() {
     ctx.fillStyle = "white";
@@ -195,14 +210,16 @@ function switchMode(newMode) {
     mode = newMode;
     document.getElementById("mode-draw").classList.toggle("active", mode === "draw");
     document.getElementById("mode-word").classList.toggle("active", mode === "word");
-    document.getElementById("mode-upload").classList.toggle("active", mode === "upload");
+
+    if (mode === "word" && uploadedFile) {
+        clearUploadedImage();
+    }
 
     document.getElementById("single-char-controls").style.display = mode === "word" ? "none" : "block";
     document.getElementById("word-controls").style.display = mode === "word" ? "block" : "none";
 
     canvas.style.display = mode === "draw" ? "block" : "none";
     wordCanvas.style.display = mode === "word" ? "block" : "none";
-    document.getElementById("preview-image").style.display = mode === "upload" ? "block" : "none";
 
     if (mode === "word") {
         activeTargetEl.innerText = "Word Slice";
@@ -213,24 +230,47 @@ function switchMode(newMode) {
 
 document.getElementById("mode-draw").addEventListener("click", () => switchMode("draw"));
 document.getElementById("mode-word").addEventListener("click", () => switchMode("word"));
-document.getElementById("mode-upload").addEventListener("click", () => {
-    switchMode("upload");
-    document.getElementById("image-upload").click();
-});
 
-document.getElementById("image-upload").addEventListener("change", (e) => {
+const uploadInput = document.getElementById("image-upload");
+const uploadCard = document.getElementById("upload-card");
+const uploadSelected = document.getElementById("upload-selected");
+const uploadStatus = document.getElementById("upload-status");
+const uploadPreview = document.getElementById("preview-image");
+const uploadFilename = document.getElementById("upload-filename");
+
+function clearUploadedImage() {
+    uploadedFile = null;
+    uploadInput.value = "";
+    uploadPreview.removeAttribute("src");
+    uploadSelected.style.display = "none";
+    uploadCard.classList.remove("active");
+    uploadStatus.classList.remove("active");
+    uploadStatus.innerText = "No image selected — the drawing pad will be analyzed instead.";
+}
+
+document.getElementById("upload-trigger").addEventListener("click", () => uploadInput.click());
+document.getElementById("upload-remove").addEventListener("click", clearUploadedImage);
+
+uploadInput.addEventListener("change", (e) => {
     const file = e.target.files[0];
-    if (file) {
-        const reader = new FileReader();
-        reader.onload = (event) => {
-            const preview = document.getElementById("preview-image");
-            preview.src = event.target.result;
-            preview.style.display = "block";
-            canvas.style.display = "none";
-            wordCanvas.style.display = "none";
-        };
-        reader.readAsDataURL(file);
+    if (!file) return;
+
+    if (mode === "word") {
+        switchMode("draw");
     }
+
+    uploadedFile = file;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+        uploadPreview.src = event.target.result;
+        uploadFilename.innerText = file.name;
+        uploadSelected.style.display = "flex";
+        uploadCard.classList.add("active");
+        uploadStatus.classList.add("active");
+        uploadStatus.innerText = "Uploaded image is now the active input — Analyze Input will use it instead of the pad.";
+    };
+    reader.readAsDataURL(file);
 });
 
 function bindPadEvents(targetCanvas, targetCtx) {
@@ -247,6 +287,9 @@ function bindPadEvents(targetCanvas, targetCtx) {
     }
 
     function start(e) {
+        if (uploadedFile) {
+            clearUploadedImage();
+        }
         isDrawing = true;
         strokeCount += 1;
         strokeCountEl.innerText = strokeCount;
@@ -287,30 +330,24 @@ bindPadEvents(wordCanvas, wordCtx);
 
 document.getElementById("clear-btn").addEventListener("click", () => {
     resetAllCanvases();
-    document.getElementById("image-upload").value = "";
+    clearUploadedImage();
     resultSpan.innerText = "Waiting...";
     confidenceText.style.display = "none";
     wordBreakdownEl.style.display = "none";
     wordBreakdownEl.innerHTML = "";
     interpretationText.style.display = "none";
     interpretationText.innerText = "";
-    if (mode === "upload") {
-        switchMode("draw");
-    }
 });
 
 document.getElementById("predict-btn").addEventListener("click", () => {
-    if (mode === "draw") {
+    if (uploadedFile) {
+        sendSingleImage(uploadedFile, "upload");
+    } else if (mode === "draw") {
         canvas.toBlob((blob) => { sendSingleImage(blob); }, "image/png");
     } else if (mode === "word") {
         wordCanvas.toBlob((blob) => { sendWordImage(blob); }, "image/png");
     } else {
-        const fileInput = document.getElementById("image-upload");
-        if (fileInput.files && fileInput.files[0]) {
-            sendSingleImage(fileInput.files[0]);
-        } else {
-            alert("Please upload an image first");
-        }
+        alert("Please draw or upload an image first");
     }
 });
 
@@ -340,10 +377,11 @@ function getInterpretation(prediction, customError = null) {
     return customError || "Please draw or upload a single, clear character inside the pad.";
 }
 
-async function sendSingleImage(blob) {
+async function sendSingleImage(blob, sourceMode = mode) {
     const formData = new FormData();
     formData.append("file", blob, "letter.png");
-    formData.append("mode", mode);
+    formData.append("mode", sourceMode);
+    formData.append("model", modelSelect.value);
     if (selectedChar) {
         formData.append("target_char", selectedChar);
     }
@@ -352,6 +390,8 @@ async function sendSingleImage(blob) {
     confidenceText.style.display = "none";
     wordBreakdownEl.style.display = "none";
     interpretationText.style.display = "none";
+    modelMeta.style.display = "none";
+    heatmapContainer.style.display = "none";
 
     try {
         const response = await fetch("/predict", { method: "POST", body: formData });
@@ -378,6 +418,14 @@ async function sendSingleImage(blob) {
         interpretationText.innerText = getInterpretation(prediction);
         interpretationText.style.display = "block";
 
+        modelMeta.innerText = `Evaluated with ${data.model_label || modelSelect.options[modelSelect.selectedIndex].text}`;
+        modelMeta.style.display = "block";
+
+        if (data.heatmap) {
+            confidenceHeatmap.src = data.heatmap;
+            heatmapContainer.style.display = "block";
+        }
+
         updateChecklistStatus(selectedChar, prediction);
         updateHistory(prediction, data.confidence, selectedChar ? `Character '${selectedChar}'` : "Unlabeled Sample");
     } catch (error) {
@@ -391,11 +439,14 @@ async function sendWordImage(blob) {
     const formData = new FormData();
     formData.append("file", blob, "word.png");
     formData.append("target_word", targetWord);
+    formData.append("model", modelSelect.value);
 
     resultSpan.innerText = "Segmenting Word...";
     confidenceText.style.display = "none";
     wordBreakdownEl.style.display = "none";
     interpretationText.style.display = "none";
+    modelMeta.style.display = "none";
+    heatmapContainer.style.display = "none";
 
     try {
         const response = await fetch("/predict_word", { method: "POST", body: formData });
@@ -430,6 +481,14 @@ async function sendWordImage(blob) {
             ? `Segmented ${data.segmented_count} characters: ${data.reversal_count} character(s) showed mirror reversal.`
             : `All ${data.segmented_count} segmented characters showed standard orientation.`;
         interpretationText.style.display = "block";
+
+        modelMeta.innerText = `Evaluated with ${data.model_label || modelSelect.options[modelSelect.selectedIndex].text}`;
+        modelMeta.style.display = "block";
+
+        if (data.heatmap) {
+            confidenceHeatmap.src = data.heatmap;
+            heatmapContainer.style.display = "block";
+        }
 
         const label = targetWord ? `Word '${targetWord}'` : `Word (${data.segmented_count} chars)`;
         updateHistory(prediction, data.confidence, label);

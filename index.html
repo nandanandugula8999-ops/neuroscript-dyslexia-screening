@@ -80,13 +80,23 @@
                     <div class="mode-switch">
                         <button id="mode-draw" type="button" class="mode-btn active">Single Letter</button>
                         <button id="mode-word" type="button" class="mode-btn">Word Mode</button>
-                        <button id="mode-upload" type="button" class="mode-btn">Upload</button>
                     </div>
                 </div>
 
+                <div class="model-select-row">
+                    <label for="model-select">Evaluation Model</label>
+                    <select id="model-select" aria-label="Evaluation model">
+                        <option value="cnn_svm" data-accuracy="94.9" data-detail="Recommended: 32x32 CNN features with a binary RBF-SVM.">CNN + SVM (Recommended)</option>
+                        <option value="cnn_rf" data-accuracy="90.7" data-detail="32x32 CNN features with a Random Forest classifier.">CNN + Random Forest</option>
+                        <option value="mobilenet_svm" data-accuracy="74.2" data-detail="ImageNet MobileNetV2 features with an SVM classifier.">MobileNetV2 + SVM</option>
+                        <option value="mobilenet_rf" data-accuracy="73.8" data-detail="ImageNet MobileNetV2 features with a Random Forest classifier.">MobileNetV2 + Random Forest</option>
+                    </select>
+                </div>
+                <p id="model-hint" class="model-hint">Recommended &middot; ~94.9% test accuracy &middot; 32x32 CNN features with a binary RBF-SVM.</p>
+
                 <!-- Single Character Target Checklist -->
                 <div id="single-char-controls">
-                    <p class="tip-text">Select a target asymmetric character, or draw freely in Auto mode.</p>
+                    <p class="tip-text">Select a target character for the most reliable result &mdash; it is needed to tell b from d and p from q. Auto mode analyzes without a reference.</p>
                     <div class="checklist-section">
                         <span class="checklist-label">Target Character Checklist:</span>
                         <div id="char-checklist" class="char-checklist">
@@ -118,8 +128,39 @@
                 <div id="canvas-container" class="canvas-stage">
                     <canvas id="canvas" width="280" height="280"></canvas>
                     <canvas id="word-canvas" width="460" height="170" style="display: none;"></canvas>
-                    <input type="file" id="image-upload" accept="image/png, image/jpeg, image/jpg" style="display: none;">
-                    <img id="preview-image" alt="Uploaded character preview" style="display: none;">
+                </div>
+
+                <div class="input-divider"><span>Or upload an image</span></div>
+
+                <div id="upload-card" class="upload-card">
+                    <div class="upload-card-header">
+                        <div>
+                            <h4>Upload a Handwriting Image</h4>
+                            <p class="upload-subtext">Use a photo or scan of one handwritten character. This is separate from the drawing pad above.</p>
+                        </div>
+                        <span class="upload-badge">Image Upload</span>
+                    </div>
+
+                    <input type="file" id="image-upload" accept="image/png, image/jpeg, image/jpg" hidden>
+
+                    <button type="button" id="upload-trigger" class="upload-trigger">
+                        <span class="upload-trigger-icon">&#8593;</span>
+                        <span class="upload-trigger-text">
+                            <strong>Choose an image file</strong>
+                            <small>PNG or JPG &middot; click to browse</small>
+                        </span>
+                    </button>
+
+                    <div id="upload-selected" class="upload-selected" style="display: none;">
+                        <img id="preview-image" alt="Uploaded character preview">
+                        <div class="upload-selected-info">
+                            <span class="upload-selected-label">Active input: uploaded image</span>
+                            <span id="upload-filename" class="upload-filename"></span>
+                            <button type="button" id="upload-remove" class="upload-remove-btn">Remove image</button>
+                        </div>
+                    </div>
+
+                    <p id="upload-status" class="upload-status">No image selected &mdash; the drawing pad will be analyzed instead.</p>
                 </div>
 
                 <div class="telemetry-strip">
@@ -166,9 +207,14 @@
                         </div>
                     </div>
 
+                    <div id="heatmap-container" class="heatmap-container" style="display: none;">
+                        <img id="confidence-heatmap" alt="Seaborn heatmap of per-class prediction confidence">
+                    </div>
+
                     <div id="word-breakdown" class="word-breakdown" style="display: none;"></div>
 
                     <p id="interpretation-text" class="interpretation-text" style="display: none;"></p>
+                    <p id="model-meta" class="model-meta" style="display: none;"></p>
                 </div>
 
                 <div id="risk-banner" class="risk-banner" style="display: none;"></div>

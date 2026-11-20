@@ -1,0 +1,20 @@
+services:
+  - type: web
+    name: neuroscript-dyslexia-screening
+    runtime: python
+    plan: standard
+    branch: main
+    buildCommand: |
+      python -m pip install --upgrade pip
+      python -m pip install -r requirements.txt
+      python setup_models.py --download
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /
+    autoDeploy: true
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.9
+      - key: PYTHONUNBUFFERED
+        value: "1"
+      - key: TF_CPP_MIN_LOG_LEVEL
+        value: "2"

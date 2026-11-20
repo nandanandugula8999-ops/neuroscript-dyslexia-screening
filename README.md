@@ -50,12 +50,25 @@ This copies `MobileNetV2_RF_Original.pkl` and `final_clean_cnn_random_forest.pkl
 
 ---
 
+## Deploy to Render
+
+The repository includes a `render.yaml` blueprint. In Render, choose **New → Blueprint**, connect this GitHub repository, and Render will use the configured build and start commands.
+
+- The build step installs `requirements.txt` and downloads the two large Random Forest models from the GitHub Release `models-v1`.
+- The service uses `uvicorn main:app --host 0.0.0.0 --port $PORT`.
+- A **Standard** plan or larger is recommended because TensorFlow and the models need roughly 2 GB RAM.
+
+---
+
 ## Project Structure
 
 ```text
 neuroscript-dyslexia-screening/
 ├── main.py                  # FastAPI server, gatekeeper, segmentation & selectable-model inference
-├── setup_models.py          # Copies the two large RF models from local Dys-le folder
+├── setup_models.py          # Copies/downloads the two large RF models
+├── requirements.txt         # Pinned Python dependencies
+├── render.yaml              # Render Blueprint deployment config
+├── runtime.txt              # Python 3.11.9 for Render
 ├── index.html               # Sign-in portal and split-screen clinical screening dashboard
 ├── style.css                # Clinical UI styling, risk badges, and print report layout
 ├── script.js                # Canvas drawing engine, telemetry tracking, auth & API integration

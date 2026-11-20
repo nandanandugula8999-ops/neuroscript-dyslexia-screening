@@ -1,0 +1,10 @@
+fastapi==0.165.0
+uvicorn==0.54.0
+python-multipart==0.0.32
+tensorflow==2.21.0
+opencv-python==5.0.0.93
+numpy==2.4.6
+scikit-learn==1.9.1
+joblib==1.6.0
+matplotlib==3.11.2
+seaborn==0.13.2
